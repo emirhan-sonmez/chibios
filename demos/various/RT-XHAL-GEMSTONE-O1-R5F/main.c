@@ -32,6 +32,21 @@ static const SIOConfig sio_config = {
 };
 
 /*
+ * SPI configuration for the ICM-20948 on MCSPI0 channel 3 (SPI0_CS3). Mode 3
+ * (CPOL=1, CPHA=1) and a conservative 1 MHz -- the datasheet allows up to
+ * 7 MHz, but this demo is a WHO_AM_I smoke test, not a throughput test.
+ * TEMP-DIAG: no board is attached to this XHAL port yet (SPI conversion is
+ * compile-verified only, see the vault's hardware validation backlog).
+ * REMOVE-AFTER: the ICM-20948 read below has been confirmed on hardware.
+ */
+static const SPIConfig spi_icm20948_config = {
+  .mode                 = 0U,
+  .speed                = 1000000U,
+  .clock_mode           = 3U,
+  .cs_channel           = 3U
+};
+
+/*
  * Writes a string to the console, blocking until the last character has
  * left the transmitter.
  */
@@ -49,6 +64,27 @@ static void console_write(const char *s) {
       chThdSleepMilliseconds(1);
     }
   }
+}
+
+/*
+ * Reads the ICM-20948 WHO_AM_I register over SPI channel 3. Proves the
+ * select/polled-exchange/unselect path runs end to end without hanging or
+ * faulting; the value itself only means something once a board is wired up
+ * (expected 0xEA), see the TEMP-DIAG note on spi_icm20948_config.
+ */
+static void spi_probe_icm20948(void) {
+  uint8_t whoami;
+
+  am67_spi0_imu_enable();
+  drvStart(&SPID1, &spi_icm20948_config);
+
+  spiSelectX(&SPID1);
+  (void)spi_lld_polled_exchange(&SPID1, 0x80U);   /* WHO_AM_I reg | read bit.*/
+  whoami = (uint8_t)spi_lld_polled_exchange(&SPID1, 0xFFU);
+  spiUnselectX(&SPID1);
+
+  trace_printf("SPI WHO_AM_I = 0x%02x\n", whoami);
+  console_write("SPI probe done\r\n");
 }
 
 /*
@@ -107,6 +143,8 @@ int main(void) {
                 "ChibiOS/RT on " PLATFORM_NAME "\r\n"
                 "board: " BOARD_NAME "\r\n"
                 "type characters to have them echoed back\r\n");
+
+  spi_probe_icm20948();
 
   chThdCreateStatic(waHeartbeat, sizeof (waHeartbeat),
                     NORMALPRIO + 1, heartbeat, NULL);

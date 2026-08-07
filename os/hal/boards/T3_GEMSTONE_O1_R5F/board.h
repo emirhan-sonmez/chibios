@@ -161,6 +161,19 @@
  * the clock muxes: the same peripheral on another carrier can be parented
  * differently. A wrong value shows up as a rate off by a clean integer
  * ratio, not as a boot failure.
+ *
+ * NOTE: AM67_EPWM0_CLK_HZ/AM67_ECAP_CLK_HZ above are consumed by the
+ * classic HAL vendor modules (am67_epwm.c/am67_ecap.c). The XHAL PWM
+ * driver (os/xhal/ports/TI/LLD/PWMv1) reads the same physical clocks
+ * under different names, AM67_EPWM_CLOCK/AM67_ECAP_CLOCK, baked into
+ * am67_registry.h as SoC-level constants rather than sourced from here.
+ * Both currently agree (250 MHz / 125 MHz), but that makes them two
+ * sources of truth for a value this file's own comment says is
+ * board-dependent, not fixed silicon. Pre-existing from the registry's
+ * original setup (predates the XHAL SPI/I2C/PWM/WDG conversions) --
+ * flagged here rather than restructured, since resolving which layer
+ * should actually own eHRPWM/eCAP's clock is a design call for the
+ * sheriff review, not something to change unilaterally mid-port.
  */
 #define AM67_ST_TIMER_CLOCK     AM67_TIMER0_CLK_HZ
 #define AM67_MAIN_UART1_CLOCK   48000000U

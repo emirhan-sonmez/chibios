@@ -95,6 +95,20 @@ static const PWMConfig pwm_ecap0_config = {
 };
 
 /*
+ * WDG configuration: 5 s timeout, serviced every heartbeat tick (1 s) --
+ * ample margin. wdg_lld_start() measures RTICLK at runtime before arming,
+ * see hal_wdg_lld.c's file header.
+ * TEMP-DIAG: compile-verified only, never actually left armed and
+ * unserviced on real hardware yet.
+ * REMOVE-AFTER: a hardware run confirms both the timeout (stop servicing,
+ * confirm a reset) and the measured-clock path (WDSTATUS after that reset
+ * shows the watchdog fired).
+ */
+static const WDGConfig wdg_config = {
+  .timeout_ms           = 5000U
+};
+
+/*
  * Writes a string to the console, blocking until the last character has
  * left the transmitter.
  */
@@ -184,6 +198,19 @@ static void pwm_probe_servo(void) {
 }
 
 /*
+ * Arms the watchdog. wdg_lld_start() blocks for ~200 ms measuring RTICLK
+ * first -- see hal_wdg_lld.c's file header for why that has to happen
+ * before arming, not be assumed.
+ */
+static void wdg_probe_arm(void) {
+
+  drvStart(&WDGD1, &wdg_config);
+  trace_printf("WDG: armed, measured clock = %u Hz, WDSTATUS = 0x%08x\n",
+              (unsigned)WDGD1.clock_hz, (unsigned)wdg_lld_status(&WDGD1));
+  console_write("WDG probe done\r\n");
+}
+
+/*
  * Blinker thread, proves the scheduler preempts and the tick advances.
  */
 static THD_WORKING_AREA(waHeartbeat, 512);
@@ -202,6 +229,7 @@ static THD_FUNCTION(heartbeat, arg) {
        would -- see hal_pwm_lld.c's file header.*/
     pwmEnableChannel(&PWMD1, 0U, 1500U);
     pwmEnableChannel(&PWMD3, 0U, 1500U);
+    wdgReset(&WDGD1);
     n++;
     chThdSleepMilliseconds(1000);
   }
@@ -248,6 +276,7 @@ int main(void) {
   spi_probe_icm20948();
   i2c_probe_bus();
   pwm_probe_servo();
+  wdg_probe_arm();
 
   chThdCreateStatic(waHeartbeat, sizeof (waHeartbeat),
                     NORMALPRIO + 1, heartbeat, NULL);

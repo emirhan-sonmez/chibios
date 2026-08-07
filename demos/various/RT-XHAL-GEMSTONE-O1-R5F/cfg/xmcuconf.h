@@ -61,6 +61,11 @@
 #define AM67_PWM_USE_EPWM0                  TRUE
 #define AM67_PWM_USE_ECAP0                  TRUE
 
+/*
+ * WDG driver system settings.
+ */
+#define AM67_WDG_USE_RTI0                   TRUE
+
 #endif /* XMCUCONF_H */
 
 /** @} */

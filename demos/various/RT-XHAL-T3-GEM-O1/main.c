@@ -46,6 +46,18 @@ static const SPIConfig spi_icm20948_config = {
 };
 
 /*
+ * I2C configuration for MCU_I2C0, the 40-pin header instance (pins 3/5).
+ * Standard mode: no sensor is wired to this bus on the Gemstone O1 (both
+ * onboard sensors are on SPI), so this is a bus-level smoke test only.
+ * TEMP-DIAG: no board is attached to this XHAL port yet (I2C conversion is
+ * compile-verified only, see the vault's hardware validation backlog).
+ * REMOVE-AFTER: the probe below has been confirmed on hardware.
+ */
+static const I2CConfig i2c0_config = {
+  .frequency            = 100000U
+};
+
+/*
  * Writes a string to the console, blocking until the last character has
  * left the transmitter.
  */
@@ -84,6 +96,35 @@ static void spi_probe_icm20948(void) {
 
   trace_printf("SPI WHO_AM_I = 0x%02x\n", whoami);
   console_write("SPI probe done\r\n");
+}
+
+/*
+ * Attempts a 1-byte read from address 0x50 (common EEPROM address) on
+ * MCU_I2C0. Nothing is wired up, so a clean NACK (I2C_ACK_FAILURE) is the
+ * expected -- and fine -- outcome; it still proves the async
+ * start/interrupt/complete path runs end to end. A hang or an unexpected
+ * MSG_RESET without I2C_ACK_FAILURE would flag a driver bug.
+ */
+static void i2c_probe_bus(void) {
+  uint8_t data;
+  msg_t msg;
+
+  drvStart(&I2CD1, &i2c0_config);
+
+  msg = i2cMasterReceiveTimeout(&I2CD1, 0x50U, &data, 1U, TIME_MS2I(50));
+  if (msg == MSG_OK) {
+    trace_printf("I2C probe: got 0x%02x from 0x50\n", data);
+  }
+  else {
+    /* Not i2cGetAndClearErrorsX(): it calls chSysGetStatusAndLockX(), which
+       chsys.c only compiles when CH_PORT_SUPPORTS_RECURSIVE_LOCKS == TRUE --
+       this ARMv7-R port does not define it, so that call is an unresolved
+       symbol here. No transfer is active at this point, so the plain,
+       non-locking read is equally correct.*/
+    trace_printf("I2C probe: msg=%d errors=0x%02x (NACK expected, nothing wired)\n",
+                (int)msg, (unsigned)i2cGetErrorsX(&I2CD1));
+  }
+  console_write("I2C probe done\r\n");
 }
 
 /*
@@ -242,6 +283,7 @@ int main(void) {
 
   sio_probe_loopback();
   spi_probe_icm20948();
+  i2c_probe_bus();
 
   chThdCreateStatic(waHeartbeat, sizeof (waHeartbeat),
                     NORMALPRIO + 1, heartbeat, NULL);

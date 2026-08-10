@@ -59,7 +59,11 @@
 #define RTI_WWDSIZE_100_PERCENT  0x00000005U
 #define RTI_WWDRXN_RESET         0x00000005U
 
-/* The down-counter decrements once per 2^13 RTICLK ticks.*/
+/* RTIDWDPRLD granularity: the preload is expressed in units of 2^13 RTICLK
+   ticks, so DWDCNTR loads with (RTIDWDPRLD + 1) * 2^13 and then decrements
+   once per RTICLK tick. The 2^13 scales the PRELOAD, not the count rate --
+   confirmed on hardware, RTIDWDPRLD = 0xFFF reads back DWDCNTR = 0x01FFFFFF
+   = (0xFFF + 1) * 8192 - 1.*/
 #define RTI_DWD_PRESCALE         8192U
 
 /*===========================================================================*/

@@ -56,8 +56,8 @@
 /*===========================================================================*/
 
 /* Length of the clock-measurement window. Long enough that the down-counter
-   (decrementing once per 8192 RTICLK ticks) moves a countable amount even
-   at a slow RTICLK, short enough not to stall driver start noticeably.*/
+   (decrementing once per RTICLK tick) moves a countable amount even at a
+   slow RTICLK, short enough not to stall driver start noticeably.*/
 #define WDT_MEASURE_WINDOW_MS    200U
 
 /*===========================================================================*/
@@ -119,9 +119,9 @@ static uint32_t wdt_measure_clock(hal_wdg_driver_c *wdgp) {
     return 0U;
   }
 
-  /* Ticks = counts * prescale, over WDT_MEASURE_WINDOW_MS milliseconds.*/
-  return ((first - second) * RTI_DWD_PRESCALE) *
-         (1000U / WDT_MEASURE_WINDOW_MS);
+  /* DWDCNTR counts RTICLK directly, so the delta IS the tick count over the
+     window -- no prescale factor. See the note on the preload above.*/
+  return (first - second) * (1000U / WDT_MEASURE_WINDOW_MS);
 }
 
 /*===========================================================================*/

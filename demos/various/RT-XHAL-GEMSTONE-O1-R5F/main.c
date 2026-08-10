@@ -227,13 +227,22 @@ static void pwm_probe_servo(void) {
 /*
  * Arms the watchdog. wdg_lld_start() blocks for ~200 ms measuring RTICLK
  * first -- see hal_wdg_lld.c's file header for why that has to happen
- * before arming, not be assumed.
+ * before arming, not be assumed. A board test on 2026-08-10 found this
+ * function printing "armed" unconditionally while drvStart() had actually
+ * returned HAL_RET_HW_FAILURE (RTICLK not running on that board) -- eight
+ * minutes ran believing the watchdog was live when it was never armed.
+ * The return value is load-bearing, not decorative.
  */
 static void wdg_probe_arm(void) {
+  msg_t msg = drvStart(&WDGD1, &wdg_config);
 
-  drvStart(&WDGD1, &wdg_config);
-  trace_printf("WDG: armed, measured clock = %u Hz, WDSTATUS = 0x%08x\n",
-              (unsigned)WDGD1.clock_hz, (unsigned)wdg_lld_status(&WDGD1));
+  if (msg == HAL_RET_SUCCESS) {
+    trace_printf("WDG: armed, measured clock = %u Hz, WDSTATUS = 0x%08x\n",
+                (unsigned)WDGD1.clock_hz, (unsigned)wdg_lld_status(&WDGD1));
+  }
+  else {
+    trace_printf("WDG: NOT ARMED, drvStart failed msg=%d\n", (int)msg);
+  }
   console_write("WDG probe done\r\n");
 }
 

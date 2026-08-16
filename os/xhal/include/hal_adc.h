@@ -524,7 +524,7 @@ CC_FORCE_INLINE
 static inline hal_adc_driver_c *adcObjectInit(hal_adc_driver_c *self) {
   extern const struct hal_adc_driver_vmt __hal_adc_driver_vmt;
 
-  return __adc_objinit_impl(self, &__hal_adc_driver_vmt);
+  return (hal_adc_driver_c *) __adc_objinit_impl(self, &__hal_adc_driver_vmt);
 }
 /** @} */
 

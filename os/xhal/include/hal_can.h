@@ -566,7 +566,7 @@ CC_FORCE_INLINE
 static inline hal_can_driver_c *canObjectInit(hal_can_driver_c *self) {
   extern const struct hal_can_driver_vmt __hal_can_driver_vmt;
 
-  return __can_objinit_impl(self, &__hal_can_driver_vmt);
+  return (hal_can_driver_c *) __can_objinit_impl(self, &__hal_can_driver_vmt);
 }
 /** @} */
 

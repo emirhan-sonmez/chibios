@@ -433,7 +433,7 @@ CC_FORCE_INLINE
 static inline hal_dac_driver_c *dacObjectInit(hal_dac_driver_c *self) {
   extern const struct hal_dac_driver_vmt __hal_dac_driver_vmt;
 
-  return __dac_objinit_impl(self, &__hal_dac_driver_vmt);
+  return (hal_dac_driver_c *) __dac_objinit_impl(self, &__hal_dac_driver_vmt);
 }
 /** @} */
 

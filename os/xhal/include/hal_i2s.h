@@ -405,7 +405,7 @@ CC_FORCE_INLINE
 static inline hal_i2s_driver_c *i2sObjectInit(hal_i2s_driver_c *self) {
   extern const struct hal_i2s_driver_vmt __hal_i2s_driver_vmt;
 
-  return __i2s_objinit_impl(self, &__hal_i2s_driver_vmt);
+  return (hal_i2s_driver_c *) __i2s_objinit_impl(self, &__hal_i2s_driver_vmt);
 }
 /** @} */
 

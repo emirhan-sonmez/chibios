@@ -194,7 +194,7 @@ CC_FORCE_INLINE
 static inline hal_trng_driver_c *trngObjectInit(hal_trng_driver_c *self) {
   extern const struct hal_trng_driver_vmt __hal_trng_driver_vmt;
 
-  return __trng_objinit_impl(self, &__hal_trng_driver_vmt);
+  return (hal_trng_driver_c *) __trng_objinit_impl(self, &__hal_trng_driver_vmt);
 }
 /** @} */
 

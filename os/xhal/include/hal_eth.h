@@ -351,7 +351,7 @@ CC_FORCE_INLINE
 static inline hal_eth_driver_c *ethObjectInit(hal_eth_driver_c *self) {
   extern const struct hal_eth_driver_vmt __hal_eth_driver_vmt;
 
-  return __eth_objinit_impl(self, &__hal_eth_driver_vmt);
+  return (hal_eth_driver_c *) __eth_objinit_impl(self, &__hal_eth_driver_vmt);
 }
 /** @} */
 

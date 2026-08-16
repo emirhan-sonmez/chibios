@@ -371,7 +371,7 @@ CC_FORCE_INLINE
 static inline hal_icu_driver_c *icuObjectInit(hal_icu_driver_c *self) {
   extern const struct hal_icu_driver_vmt __hal_icu_driver_vmt;
 
-  return __icu_objinit_impl(self, &__hal_icu_driver_vmt);
+  return (hal_icu_driver_c *) __icu_objinit_impl(self, &__hal_icu_driver_vmt);
 }
 /** @} */
 

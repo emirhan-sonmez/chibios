@@ -1128,8 +1128,10 @@ ${s}
                                   node      = node.methods.objinit[0] /] {
 
     [#local params = ccode.MakeCallParamsSequence(["self", "&__" + classname + "_vmt"], node.methods.objinit[0])]
+[#-- The impl returns void *; the cast keeps the generated inline valid C++,
+     where an implicit void * conversion is an error rather than a warning.--]
 [@ccode.GenerateFunctionCall indent      = ccode.indentation
-                             destination = "return"
+                             destination = "return (" + classctype + " *)"
                              name        = "__" + classnamespace + "_objinit_impl"
                              params      = params /]
 }
@@ -1181,8 +1183,10 @@ CC_FORCE_INLINE
 [@ccode.Indent 1 /]extern const struct ${classname}_vmt __${classname}_vmt;
 
     [#local params = ccode.MakeCallParamsSequence(["self", "&__" + classname + "_vmt"], node.methods.objinit[0])]
+[#-- The impl returns void *; the cast keeps the generated inline valid C++,
+     where an implicit void * conversion is an error rather than a warning.--]
 [@ccode.GenerateFunctionCall indent      = ccode.indentation
-                             destination = "return"
+                             destination = "return (" + classctype + " *)"
                              name        = "__" + classnamespace + "_objinit_impl"
                              params      = params /]
 }

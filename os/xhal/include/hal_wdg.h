@@ -209,7 +209,7 @@ CC_FORCE_INLINE
 static inline hal_wdg_driver_c *wdgObjectInit(hal_wdg_driver_c *self) {
   extern const struct hal_wdg_driver_vmt __hal_wdg_driver_vmt;
 
-  return __wdg_objinit_impl(self, &__hal_wdg_driver_vmt);
+  return (hal_wdg_driver_c *) __wdg_objinit_impl(self, &__hal_wdg_driver_vmt);
 }
 /** @} */
 

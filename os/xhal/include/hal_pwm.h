@@ -475,7 +475,7 @@ CC_FORCE_INLINE
 static inline hal_pwm_driver_c *pwmObjectInit(hal_pwm_driver_c *self) {
   extern const struct hal_pwm_driver_vmt __hal_pwm_driver_vmt;
 
-  return __pwm_objinit_impl(self, &__hal_pwm_driver_vmt);
+  return (hal_pwm_driver_c *) __pwm_objinit_impl(self, &__hal_pwm_driver_vmt);
 }
 /** @} */
 

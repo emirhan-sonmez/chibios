@@ -384,7 +384,7 @@ CC_FORCE_INLINE
 static inline hal_wspi_driver_c *wspiObjectInit(hal_wspi_driver_c *self) {
   extern const struct hal_wspi_driver_vmt __hal_wspi_driver_vmt;
 
-  return __wspi_objinit_impl(self, &__hal_wspi_driver_vmt);
+  return (hal_wspi_driver_c *) __wspi_objinit_impl(self, &__hal_wspi_driver_vmt);
 }
 /** @} */
 

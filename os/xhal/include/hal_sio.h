@@ -826,7 +826,7 @@ CC_FORCE_INLINE
 static inline hal_sio_driver_c *sioObjectInit(hal_sio_driver_c *self) {
   extern const struct hal_sio_driver_vmt __hal_sio_driver_vmt;
 
-  return __sio_objinit_impl(self, &__hal_sio_driver_vmt);
+  return (hal_sio_driver_c *) __sio_objinit_impl(self, &__hal_sio_driver_vmt);
 }
 /** @} */
 
@@ -856,8 +856,10 @@ static inline hal_buffered_sio_c *bsioObjectInit(hal_buffered_sio_c *self,
                                                  uint8_t *ob, size_t obsize) {
   extern const struct hal_buffered_sio_vmt __hal_buffered_sio_vmt;
 
-  return __bsio_objinit_impl(self, &__hal_buffered_sio_vmt, siop, ib, ibsize,
-                             ob, obsize);
+  return (hal_buffered_sio_c *) __bsio_objinit_impl(self,
+                                                   &__hal_buffered_sio_vmt,
+                                                   siop, ib, ibsize, ob,
+                                                   obsize);
 }
 /** @} */
 #endif /* SIO_USE_BUFFERING == TRUE */

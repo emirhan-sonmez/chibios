@@ -439,7 +439,7 @@ CC_FORCE_INLINE
 static inline hal_spi_driver_c *spiObjectInit(hal_spi_driver_c *self) {
   extern const struct hal_spi_driver_vmt __hal_spi_driver_vmt;
 
-  return __spi_objinit_impl(self, &__hal_spi_driver_vmt);
+  return (hal_spi_driver_c *) __spi_objinit_impl(self, &__hal_spi_driver_vmt);
 }
 /** @} */
 

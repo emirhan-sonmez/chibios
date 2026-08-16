@@ -383,7 +383,7 @@ CC_FORCE_INLINE
 static inline hal_i2c_driver_c *i2cObjectInit(hal_i2c_driver_c *self) {
   extern const struct hal_i2c_driver_vmt __hal_i2c_driver_vmt;
 
-  return __i2c_objinit_impl(self, &__hal_i2c_driver_vmt);
+  return (hal_i2c_driver_c *) __i2c_objinit_impl(self, &__hal_i2c_driver_vmt);
 }
 /** @} */
 

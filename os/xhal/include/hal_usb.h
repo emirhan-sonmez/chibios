@@ -1330,7 +1330,7 @@ CC_FORCE_INLINE
 static inline hal_usb_binder_c *usbBinderObjectInit(void *ip,
                                                     const struct hal_usb_binder_vmt *vmt) {
   hal_usb_binder_c *self = (hal_usb_binder_c *)ip;
-  return __usbbnd_objinit_impl(self, vmt);
+  return (hal_usb_binder_c *) __usbbnd_objinit_impl(self, vmt);
 }
 
 /**
@@ -1421,7 +1421,7 @@ CC_FORCE_INLINE
 static inline hal_usb_driver_c *usbObjectInit(hal_usb_driver_c *self) {
   extern const struct hal_usb_driver_vmt __hal_usb_driver_vmt;
 
-  return __usb_objinit_impl(self, &__hal_usb_driver_vmt);
+  return (hal_usb_driver_c *) __usb_objinit_impl(self, &__hal_usb_driver_vmt);
 }
 /** @} */
 

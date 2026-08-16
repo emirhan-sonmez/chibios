@@ -216,7 +216,7 @@ CC_FORCE_INLINE
 static inline hal_efl_driver_c *eflObjectInit(hal_efl_driver_c *self) {
   extern const struct hal_efl_driver_vmt __hal_efl_driver_vmt;
 
-  return __efl_objinit_impl(self, &__hal_efl_driver_vmt);
+  return (hal_efl_driver_c *) __efl_objinit_impl(self, &__hal_efl_driver_vmt);
 }
 /** @} */
 

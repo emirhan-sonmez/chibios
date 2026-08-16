@@ -595,7 +595,7 @@ CC_FORCE_INLINE
 static inline hal_sdc_driver_c *sdcObjectInit(hal_sdc_driver_c *self) {
   extern const struct hal_sdc_driver_vmt __hal_sdc_driver_vmt;
 
-  return __sdc_objinit_impl(self, &__hal_sdc_driver_vmt);
+  return (hal_sdc_driver_c *) __sdc_objinit_impl(self, &__hal_sdc_driver_vmt);
 }
 /** @} */
 

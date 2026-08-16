@@ -363,7 +363,7 @@ CC_FORCE_INLINE
 static inline hal_rtc_driver_c *rtcObjectInit(hal_rtc_driver_c *self) {
   extern const struct hal_rtc_driver_vmt __hal_rtc_driver_vmt;
 
-  return __rtc_objinit_impl(self, &__hal_rtc_driver_vmt);
+  return (hal_rtc_driver_c *) __rtc_objinit_impl(self, &__hal_rtc_driver_vmt);
 }
 /** @} */
 

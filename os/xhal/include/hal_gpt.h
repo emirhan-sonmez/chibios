@@ -300,7 +300,7 @@ CC_FORCE_INLINE
 static inline hal_gpt_driver_c *gptObjectInit(hal_gpt_driver_c *self) {
   extern const struct hal_gpt_driver_vmt __hal_gpt_driver_vmt;
 
-  return __gpt_objinit_impl(self, &__hal_gpt_driver_vmt);
+  return (hal_gpt_driver_c *) __gpt_objinit_impl(self, &__hal_gpt_driver_vmt);
 }
 /** @} */
 

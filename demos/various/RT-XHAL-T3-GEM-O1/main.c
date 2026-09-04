@@ -87,6 +87,103 @@ static void echo_loop(void) {
   }
 }
 
+/*
+ * Drains the receiver, bounded.
+ *
+ * The bound is the point of this helper: UART1 RX is muxed to header pin 10
+ * with nothing attached to it, and a floating receiver produces a continuous
+ * stream of framing errors and random bytes. An open-ended drain never
+ * returns on such a line.
+ *
+ * @return  the number of frames discarded, capped by the bound.
+ */
+static size_t sio_drain_rx(void) {
+  uint8_t d[8];
+  size_t total = 0U;
+  unsigned i;
+
+  for (i = 0U; i < 64U; i++) {
+    size_t k = sioAsyncReadX(&SIOD1, d, sizeof d);
+
+    if (k == 0U) {
+      break;
+    }
+    total += k;
+  }
+  (void)sioGetAndClearErrorsX(&SIOD1);
+
+  return total;
+}
+
+/*
+ * Interrupt-driven SIO synchronization check, over the UART's own internal
+ * loopback so that it needs no cable and no free pad.
+ *
+ * This is the counterpart of a polled loopback: it goes through
+ * sioSynchronizeTXEnd() and sioSynchronizeRX(), both of which are resumed
+ * from the UART interrupt handler, so it fails by timing out if the VIM
+ * line is not wired up, if the RX FIFO trigger is set higher than the
+ * payload, or if the TX-end detection never observes TEMT.
+ *
+ * The counts of what was drained before and after enabling the loopback are
+ * reported: on a board whose RX pad is left floating they say whether the
+ * loopback really isolated the receiver, which decides whether the payload
+ * comparison below means anything at all.
+ */
+static void sio_probe_loopback(void) {
+  static const uint8_t tx[] = { 'P', 'I', 'N', 'G' };
+  uint8_t rx[sizeof tx];
+  size_t pre, post, n;
+  msg_t msg;
+
+  /* Anything written before this point has only been accepted by the TX
+     FIFO, not put on the wire. Letting it go out first keeps it from
+     looping back into the payload.*/
+  (void)sioSynchronizeTXEnd(&SIOD1, TIME_MS2I(100));
+
+  pre = sio_drain_rx();
+
+  /* Internal loopback, MCR is not touched by the driver itself.*/
+  SIOD1.uart->MCR |= TI_UART_MCR_LPBK;
+
+  post = sio_drain_rx();
+
+  n = sioAsyncWriteX(&SIOD1, tx, sizeof tx);
+  if (n != sizeof tx) {
+    trace_printf("SIO loopback: short write %u\n", (unsigned)n);
+    goto done;
+  }
+
+  msg = sioSynchronizeTXEnd(&SIOD1, TIME_MS2I(100));
+  if (msg != MSG_OK) {
+    trace_printf("SIO loopback: TX end msg=%d\n", (int)msg);
+    goto done;
+  }
+
+  msg = sioSynchronizeRX(&SIOD1, TIME_MS2I(100));
+  if (msg != MSG_OK) {
+    trace_printf("SIO loopback: RX msg=%d\n", (int)msg);
+    goto done;
+  }
+
+  n = sioAsyncReadX(&SIOD1, rx, sizeof rx);
+  trace_printf("SIO loopback: drained %u/%u read %u '%c%c%c%c' errors=0x%02x\n",
+               (unsigned)pre, (unsigned)post, (unsigned)n,
+               rx[0], rx[1], rx[2], rx[3],
+               (unsigned)sioGetAndClearErrorsX(&SIOD1));
+
+done:
+  /* A driver whose interrupt line was taken down by the runaway guard is
+     reported rather than left looking merely idle.*/
+  if (SIOD1.runaway) {
+    trace_printf("SIO loopback: RUNAWAY, interrupt line disabled\n");
+  }
+
+  SIOD1.uart->MCR &= ~TI_UART_MCR_LPBK;
+  (void)sio_drain_rx();
+  console_write("SIO loopback probe done\r\n");
+}
+
 int main(void) {
 
   /* System initializations:
@@ -107,6 +204,8 @@ int main(void) {
                 "ChibiOS/RT on " PLATFORM_NAME "\r\n"
                 "board: " BOARD_NAME "\r\n"
                 "type characters to have them echoed back\r\n");
+
+  sio_probe_loopback();
 
   chThdCreateStatic(waHeartbeat, sizeof (waHeartbeat),
                     NORMALPRIO + 1, heartbeat, NULL);
